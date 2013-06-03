@@ -15,4 +15,4 @@ demo_prog: libuncut.a demo_prog.o
 	$(CC) -o $@ demo_prog.o libuncut.a $(LFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f *.o demo_prog

@@ -6,14 +6,13 @@ static int pass_test(void)
 {
     printf("Pass test\n");
     uncut_set_message("Pass test was all good", 0);
+    uncut_set_message("Set some global notes", 1);
     return 0;
 }
 
 static int fail_test(void)
 {
-    printf("Fail test: %s\n", uncut_param("param_name"));
-    uncut_set_message("Set some global notes", 1);
-    return -1;
+    return uncut_error("Fail test: %s\n", uncut_param("param_name"));
 }
 
 struct uncut_parameter params[] = {
