@@ -79,5 +79,13 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
  */
 void uncut_set_message(const char *message, int global);
 
+/**
+ * Utility function to print out an error message, and exit
+ * from a test.
+ * Takes a printf style error message argument
+ * @return Always returns -1 to indicate test failure
+ */
+int uncut_error(const char *message, ...);
+
 #endif
 

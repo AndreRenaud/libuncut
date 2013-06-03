@@ -459,4 +459,18 @@ void uncut_set_message(const char *message, int global)
     }
 }
 
+int uncut_error(const char *message, ...)
+{
+    va_list ap;
+    char *buf;
+
+    va_start(ap, message);
+    vasprintf(&buf, message, ap);
+    va_end(ap);
+
+    uncut_set_message(buf, 0);
+    fputs(buf, stderr);
+
+    return -1;
+}
 
