@@ -6,12 +6,13 @@
  */
 #define _GNU_SOURCE
 #include <errno.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <stdint.h>
 
 #include "uncut.h"
 
@@ -448,7 +449,6 @@ int uncut_param_int(const char *name)
 
 void uncut_set_message(const char *message, int global)
 {
-    /* FIXME: Put them in the database */
     if (!global_db)
         return;
     if (global)
