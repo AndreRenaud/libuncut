@@ -38,6 +38,15 @@ struct uncut_parameter {
     const char *description;
 };
 
+/**
+ * Callback called before and after each test execution.
+ * When called before a test, test_time_ms will be -1
+ * When callde after a test, test_time_ms will be >= 0
+ * @param suite Test suite which the test is a part of
+ * @param test Test being run
+ * @param retval Return value of the test function (== 0 if being called before the test execution)
+ * @param test_time_ms Time (in milli-seconds) that the test took to run. == -1 if being called before test execution
+ */
 typedef void (*uncut_callback)(struct uncut_suite *suite, struct uncut_test *test, int retval, int test_time_ms);
 
 /**
@@ -70,26 +79,6 @@ int uncut_param_int(const char *name);
 int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
                     struct uncut_parameter *parameters, int argc, char *argv[],
                     uncut_callback cb);
-
-/**
- * Can be called from within an 'uncut_function' to set the
- * summary message for the test run.
- * This summary message can be saved in the database/report output
- * @param message String message to add
- * @param global Boolean flag - if not set then this is the message for the
- *          currently executing test, otherwise it is a global
- *          message for the entire test run (multiple global messages
- *          are allowed)
- */
-void uncut_set_message(const char *message, int global);
-
-/**
- * Utility function to print out an error message, and exit
- * from a test.
- * Takes a printf style error message argument
- * @return Always returns -1 to indicate test failure
- */
-int uncut_error(const char *message, ...);
 
 #endif
 
