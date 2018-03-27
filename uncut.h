@@ -38,6 +38,8 @@ struct uncut_parameter {
     const char *description;
 };
 
+typedef void (*uncut_callback)(struct uncut_suite *suite, struct uncut_test *test, int retval, int test_time_ms);
+
 /**
  * Retrieve a parameter, as passed on the command line.
  * This function can only be used from within a test function
@@ -62,10 +64,12 @@ int uncut_param_int(const char *name);
  * @param parameters NULL terminated list of test suite parameters
  * @param argc Command line argument count
  * @param argv Command line argument list
+ * @param cb Callback to call on completion of each test
  * @return 0 if all tests run successfully, < 0 otherwise
  */
 int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
-        struct uncut_parameter *parameters, int argc, char *argv[]);
+                    struct uncut_parameter *parameters, int argc, char *argv[],
+                    uncut_callback cb);
 
 /**
  * Can be called from within an 'uncut_function' to set the
