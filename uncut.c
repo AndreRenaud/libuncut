@@ -216,6 +216,7 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
             }
         }
     }
+    global_parameters = parameters;
 
     /* Execute the tests */
     for (i = 0; i < ntests && (continue_on_failure || !failed); i++) {
