@@ -80,5 +80,11 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
                     struct uncut_parameter *parameters, int argc, char *argv[],
                     uncut_callback cb);
 
+/**
+ * Utility macros to simplify test code
+ */
+#define UNCUT_ASSERT(a) if (!(a)) { fprintf(stderr, "Error: %s:%d: !" #a "\n", __PRETTY_FUNCTION__, __LINE__); return -1; }
+#define UNCUT_EQ(a,b) if ((a) != (b)) { fprintf(stderr, "Error: %s:%d: " #a " != " #b "\n", __PRETTY_FUNCTION__, __LINE__); return -1; }
+
 #endif
 

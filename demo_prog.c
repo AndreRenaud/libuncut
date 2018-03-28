@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "uncut.h"
@@ -21,6 +22,13 @@ static int slow_test(void)
     return 0;
 }
 
+static int param_test(void)
+{
+    UNCUT_EQ(uncut_param_int("myvalue"), 10);
+    UNCUT_ASSERT(strcmp(uncut_param("myvalue"), "somevalue") == 0);
+    return 0;
+}
+
 struct uncut_parameter params[] = {
     {"myvalue",  "10",   "Some value that the tests use"},
     {NULL, NULL, NULL},
@@ -31,6 +39,7 @@ struct uncut_test tests[] = {
     {"fail", fail_test},
     {"pass2", pass_test},
     {"slow", slow_test},
+    {"params", param_test},
     {NULL, NULL},
 };
 
