@@ -220,11 +220,19 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
     /* Execute the tests */
     for (i = 0; i < ntests && (continue_on_failure || !failed); i++) {
         struct uncut_test *item = &tests[i].group->tests[tests[i].item_index];
-        if (callback)
+        struct timespec ts1, ts2;
+        if (callback) {
             callback(tests[i].group, item, 0, -1);
+            if (clock_gettime(CLOCK_MONOTONIC, &ts1) < 0)
+                ts1.tv_sec = ts1.tv_nsec = 0;
+        }
         tests[i].result = item->function();
-        if (callback)
-            callback(tests[i].group, item, tests[i].result, 0);
+        if (callback) {
+            if (clock_gettime(CLOCK_MONOTONIC, &ts2) < 0)
+                ts2.tv_sec = ts2.tv_nsec = 0;
+            callback(tests[i].group, item, tests[i].result,
+                     (ts2.tv_sec - ts1.tv_sec) * 1000 + (ts2.tv_nsec - ts1.tv_nsec) / 1000000);
+        }
         if (tests[i].result < 0)
             failed++;
     }
