@@ -5,13 +5,13 @@
 
 static int pass_test(void)
 {
-    printf("Pass test\n");
+    printf("Pass test: %s\n", uncut_param("myvalue"));
     return 0;
 }
 
 static int fail_test(void)
 {
-    printf("Failed test\n");
+    printf("Failed test: %d\n", uncut_param_int("myvalue"));
     return -1;
 }
 
