@@ -115,6 +115,7 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
         case 't': {
             char *group_name, *items;
             struct uncut_suite *group;
+            struct uncut_execution *new_tests;
 
             group_name = optarg;
             items = strchr(optarg, ':');
@@ -141,19 +142,25 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
                 }
                 /* FIXME: Parse item numbers properly */
                 ntests++;
-                tests = realloc(tests, ntests * sizeof(struct uncut_execution));
-                if (!tests)
+                new_tests = realloc(tests, ntests * sizeof(struct uncut_execution));
+                if (!new_tests) {
+                    free(tests);
                     return -ENOMEM;
+                }
+                tests = new_tests;
                 tests[ntests - 1].group = group;
                 tests[ntests - 1].item_index = index;
                 tests[ntests - 1].result = 0;
             } else {
                 for (i = 0; group->tests[i].item_name; i++) {
                     ntests++;
-                    tests = realloc(tests,
-                                    ntests * sizeof(struct uncut_execution));
-                    if (!tests)
+                    new_tests = realloc(tests,
+                                        ntests * sizeof(struct uncut_execution));
+                    if (!new_tests) {
+                        free(tests);
                         return -ENOMEM;
+                    }
+                    tests = new_tests;
                     tests[ntests - 1].group = group;
                     tests[ntests - 1].item_index = i;
                     tests[ntests - 1].result = 0;
@@ -206,10 +213,14 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
         struct uncut_suite *group;
         for (group = groups; group && group->group_name && group->tests; group++) {
             for (i = 0; group->tests[i].item_name && group->tests[i].function; i++) {
+                struct uncut_execution *new_tests;
                 ntests++;
-                tests = realloc(tests, ntests * sizeof(struct uncut_execution));
-                if (!tests)
+                new_tests = realloc(tests, ntests * sizeof(struct uncut_execution));
+                if (!new_tests) {
+                    free(tests);
                     return -ENOMEM;
+                }
+                tests = new_tests;
                 tests[ntests - 1].group = group;
                 tests[ntests - 1].item_index = i;
                 tests[ntests - 1].result = 0;
