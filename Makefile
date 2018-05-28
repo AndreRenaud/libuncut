@@ -8,7 +8,6 @@ libuncut.a: uncut.o
 	$(AR) crs $@ $<
 
 %.o: %.c
-	cppcheck $(CHECKARGS) $<
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 format: FORCE

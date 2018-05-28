@@ -80,7 +80,9 @@ static int set_parameter(struct uncut_parameter *parameters,
 static struct uncut_suite *find_group(struct uncut_suite *groups, const char *name)
 {
     for (; groups->group_name; groups++) {
-        if (strcmp(groups->group_name, name) == 0)
+        int len = strlen(groups->group_name);
+        if (strncmp(groups->group_name, name, len) == 0 &&
+            (name[len] == '\0' || name[len] == ':'))
             return groups;
     }
     fprintf(stderr, "Invalid group name: '%s'\n", name);
@@ -119,10 +121,6 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
 
             group_name = optarg;
             items = strchr(optarg, ':');
-            if (items) {
-                *items = '\0';
-                items++;
-            }
             group = find_group(groups, group_name);
             if (!group) {
                 free(tests);
@@ -130,27 +128,36 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
             }
 
             if (items) {
-                int index = atoi(items);
-                /* We display them indexed from 1, not 0 */
-                index--;
+                for (; items; items = strchr(items, ',')) {
+                    items++; // skip the ':' or ','
+                    if (!*items) {
+                        fprintf(stderr, "Invalid test id specification in '%s'\n", optarg);
+                        free(tests);
+                        return -1;
+                    }
+                    int index = atoi(items);
+                    /* We display them indexed from 1, not 0 */
+                    index--;
 
-                if (index < 0 || index >= group_count(group)) {
-                    fprintf(stderr, "Invalid index for test %s: %d\n",
-                            group_name, index + 1);
-                    free(tests);
-                    return -1;
+                    if (index < 0 || index >= group_count(group)) {
+                        fprintf(stderr, "Invalid index for test %s: %d (valid range: %d-%d)\n",
+                                group->group_name, index + 1,
+                                1, group_count(group));
+                        free(tests);
+                        return -1;
+                    }
+                    /* FIXME: Parse item numbers properly */
+                    ntests++;
+                    new_tests = realloc(tests, ntests * sizeof(struct uncut_execution));
+                    if (!new_tests) {
+                        free(tests);
+                        return -ENOMEM;
+                    }
+                    tests = new_tests;
+                    tests[ntests - 1].group = group;
+                    tests[ntests - 1].item_index = index;
+                    tests[ntests - 1].result = 0;
                 }
-                /* FIXME: Parse item numbers properly */
-                ntests++;
-                new_tests = realloc(tests, ntests * sizeof(struct uncut_execution));
-                if (!new_tests) {
-                    free(tests);
-                    return -ENOMEM;
-                }
-                tests = new_tests;
-                tests[ntests - 1].group = group;
-                tests[ntests - 1].item_index = index;
-                tests[ntests - 1].result = 0;
             } else {
                 for (i = 0; group->tests[i].item_name; i++) {
                     ntests++;
