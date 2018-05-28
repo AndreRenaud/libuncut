@@ -82,7 +82,7 @@ static struct uncut_suite *find_group(struct uncut_suite *groups, const char *na
     for (; groups->group_name; groups++) {
         int len = strlen(groups->group_name);
         if (strncmp(groups->group_name, name, len) == 0 &&
-            (name[len] == '\0' || name[len] == ':'))
+                (name[len] == '\0' || name[len] == ':'))
             return groups;
     }
     fprintf(stderr, "Invalid group name: '%s'\n", name);
