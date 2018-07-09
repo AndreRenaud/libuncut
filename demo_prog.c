@@ -30,17 +30,13 @@ static int param_test(void)
 }
 
 struct uncut_parameter params[] = {
-    {"myvalue",  "10",   "Some value that the tests use"},
+    {"myvalue", "10", "Some value that the tests use"},
     {NULL, NULL, NULL},
 };
 
 struct uncut_test tests[] = {
-    {"pass", pass_test},
-    {"fail", fail_test},
-    {"pass2", pass_test},
-    {"slow", slow_test},
-    {"params", param_test},
-    {NULL, NULL},
+    {"pass", pass_test}, {"fail", fail_test},    {"pass2", pass_test},
+    {"slow", slow_test}, {"params", param_test}, {NULL, NULL},
 };
 
 struct uncut_suite suite[] = {
@@ -61,5 +57,6 @@ static void test_callback(struct uncut_suite *suite, struct uncut_test *test,
 
 int main(int argc, char *argv[])
 {
-    return uncut_suite_run("Demo tests",suite, params, argc, argv, test_callback);
+    return uncut_suite_run("Demo tests", suite, params, argc, argv,
+                           test_callback);
 }

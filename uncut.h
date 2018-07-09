@@ -44,10 +44,14 @@ struct uncut_parameter {
  * When callde after a test, test_time_ms will be >= 0
  * @param suite Test suite which the test is a part of
  * @param test Test being run
- * @param retval Return value of the test function (== 0 if being called before the test execution)
- * @param test_time_ms Time (in milli-seconds) that the test took to run. == -1 if being called before test execution
+ * @param retval Return value of the test function (== 0 if being called
+ * before the test execution)
+ * @param test_time_ms Time (in milli-seconds) that the test took to run. ==
+ * -1 if being called before test execution
  */
-typedef void (*uncut_callback)(struct uncut_suite *suite, struct uncut_test *test, int retval, int test_time_ms);
+typedef void (*uncut_callback)(struct uncut_suite *suite,
+                               struct uncut_test *test, int retval,
+                               int test_time_ms);
 
 /**
  * Retrieve a parameter, as passed on the command line.
@@ -77,14 +81,23 @@ int uncut_param_int(const char *name);
  * @return 0 if all tests run successfully, < 0 otherwise
  */
 int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
-                    struct uncut_parameter *parameters, int argc, char *argv[],
-                    uncut_callback cb);
+                    struct uncut_parameter *parameters, int argc,
+                    char *argv[], uncut_callback cb);
 
 /**
  * Utility macros to simplify test code
  */
-#define UNCUT_ASSERT(a) if (!(a)) { fprintf(stderr, "Error: %s:%d: !" #a "\n", __PRETTY_FUNCTION__, __LINE__); return -1; }
-#define UNCUT_EQ(a,b) if ((a) != (b)) { fprintf(stderr, "Error: %s:%d: " #a " != " #b "\n", __PRETTY_FUNCTION__, __LINE__); return -1; }
+#define UNCUT_ASSERT(a)                                                      \
+    if (!(a)) {                                                              \
+        fprintf(stderr, "Error: %s:%d: !" #a "\n", __PRETTY_FUNCTION__,      \
+                __LINE__);                                                   \
+        return -1;                                                           \
+    }
+#define UNCUT_EQ(a, b)                                                       \
+    if ((a) != (b)) {                                                        \
+        fprintf(stderr, "Error: %s:%d: " #a " != " #b "\n",                  \
+                __PRETTY_FUNCTION__, __LINE__);                              \
+        return -1;                                                           \
+    }
 
 #endif
-
