@@ -280,6 +280,10 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
     }
     global_parameters = parameters;
 
+    // There aren't any tests supplied
+    if (ntests == 0)
+        return -1;
+
     /* Execute the tests */
     if (parallel <= 1) {
         for (i = 0; i < ntests && (continue_on_failure || !failed); i++) {
