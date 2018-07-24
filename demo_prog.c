@@ -22,6 +22,12 @@ static int slow_test(void)
     return 0;
 }
 
+static int slow_fail_test(void)
+{
+    sleep(10);
+    return -1;
+}
+
 static int param_test(void)
 {
     UNCUT_EQ(uncut_param_int("myvalue"), 10);
@@ -35,8 +41,13 @@ struct uncut_parameter params[] = {
 };
 
 struct uncut_test tests[] = {
-    {"pass", pass_test}, {"fail", fail_test},    {"pass2", pass_test},
-    {"slow", slow_test}, {"params", param_test}, {NULL, NULL},
+    {"pass", pass_test},
+    {"fail", fail_test},
+    {"pass2", pass_test},
+    {"slow", slow_test},
+    {"slow_fail", slow_fail_test},
+    {"params", param_test},
+    {NULL, NULL},
 };
 
 struct uncut_suite suite[] = {
@@ -44,8 +55,9 @@ struct uncut_suite suite[] = {
     {NULL, NULL},
 };
 
-static void test_callback(struct uncut_suite *suite, struct uncut_test *test,
-                          int retval, int test_time)
+static void test_callback(const struct uncut_suite *suite,
+                          const struct uncut_test *test, int retval,
+                          int test_time)
 {
     if (test_time < 0) {
         printf("Running test '%s/%s': ", suite->group_name, test->item_name);

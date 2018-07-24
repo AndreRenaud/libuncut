@@ -1,4 +1,5 @@
 CFLAGS=-g -Wall -pipe
+LFLAGS=-lpthread
 
 CHECKARGS=--std=c99 --error-exitcode=1 --enable=style,warning,performance,portability,unusedFunction --quiet
 CLANG_FORMAT?=clang-format

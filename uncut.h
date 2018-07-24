@@ -49,8 +49,8 @@ struct uncut_parameter {
  * @param test_time_ms Time (in milli-seconds) that the test took to run. ==
  * -1 if being called before test execution
  */
-typedef void (*uncut_callback)(struct uncut_suite *suite,
-                               struct uncut_test *test, int retval,
+typedef void (*uncut_callback)(const struct uncut_suite *suite,
+                               const struct uncut_test *test, int retval,
                                int test_time_ms);
 
 /**

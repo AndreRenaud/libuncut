@@ -6,6 +6,8 @@
  */
 #define _GNU_SOURCE
 #include <errno.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,9 +19,11 @@
 #include "uncut.h"
 
 struct uncut_execution {
+    uncut_callback callback;
     struct uncut_suite *group;
     int item_index;
     int result;
+    sem_t *sem;
 };
 
 static struct uncut_parameter *global_parameters = NULL;
@@ -52,6 +56,8 @@ static void uncut_usage(const char *program, struct uncut_suite *groups,
             "Usage: %s [-t group_name[:n]] [-p parameter=value] [-c]\n",
             program);
     fprintf(stderr, "\t-c - Continue running tests on failure\n");
+    fprintf(stderr,
+            "\t-j N - Run tests using N parallel threads. Implies -c\n");
 
     print_uncut_details(groups, parameters);
 }
@@ -98,6 +104,35 @@ static int group_count(struct uncut_suite *group)
     return i;
 }
 
+static int run_test(struct uncut_execution *test)
+{
+    struct uncut_test *item = &test->group->tests[test->item_index];
+    struct timespec ts1, ts2;
+    if (test->callback) {
+        test->callback(test->group, item, 0, -1);
+        if (clock_gettime(CLOCK_MONOTONIC, &ts1) < 0)
+            ts1.tv_sec = ts1.tv_nsec = 0;
+    }
+    test->result = item->function();
+    if (test->callback) {
+        if (clock_gettime(CLOCK_MONOTONIC, &ts2) < 0)
+            ts2.tv_sec = ts2.tv_nsec = 0;
+        test->callback(test->group, item, test->result,
+                       (ts2.tv_sec - ts1.tv_sec) * 1000 +
+                           (ts2.tv_nsec - ts1.tv_nsec) / 1000000);
+    }
+    return test->result;
+}
+
+static void *run_test_thread(void *data)
+{
+    struct uncut_execution *test = data;
+    run_test(test);
+    if (test->sem)
+        sem_post(test->sem);
+    return NULL;
+}
+
 int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
                     struct uncut_parameter *parameters, int argc,
                     char *argv[], uncut_callback callback)
@@ -107,9 +142,10 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
     int i;
     int failed = 0;
     int continue_on_failure = 0;
+    int parallel = 0;
 
     while (1) {
-        int c = getopt(argc, argv, "t:p:lch");
+        int c = getopt(argc, argv, "t:p:lchj:");
 
         if (c == -1)
             break;
@@ -206,6 +242,11 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
             continue_on_failure = 1;
             break;
 
+        case 'j':
+            parallel = atoi(optarg);
+            continue_on_failure = 1;
+            break;
+
         case 'h':
         default:
             free(tests);
@@ -239,30 +280,33 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
                 tests[ntests - 1].group = group;
                 tests[ntests - 1].item_index = i;
                 tests[ntests - 1].result = 0;
+                tests[ntests - 1].callback = callback;
+                tests[ntests - 1].sem = NULL;
             }
         }
     }
     global_parameters = parameters;
 
     /* Execute the tests */
-    for (i = 0; i < ntests && (continue_on_failure || !failed); i++) {
-        struct uncut_test *item = &tests[i].group->tests[tests[i].item_index];
-        struct timespec ts1, ts2;
-        if (callback) {
-            callback(tests[i].group, item, 0, -1);
-            if (clock_gettime(CLOCK_MONOTONIC, &ts1) < 0)
-                ts1.tv_sec = ts1.tv_nsec = 0;
+    if (parallel <= 1) {
+        for (i = 0; i < ntests && (continue_on_failure || !failed); i++) {
+            if (run_test(&tests[i]) < 0)
+                failed++;
         }
-        tests[i].result = item->function();
-        if (callback) {
-            if (clock_gettime(CLOCK_MONOTONIC, &ts2) < 0)
-                ts2.tv_sec = ts2.tv_nsec = 0;
-            callback(tests[i].group, item, tests[i].result,
-                     (ts2.tv_sec - ts1.tv_sec) * 1000 +
-                         (ts2.tv_nsec - ts1.tv_nsec) / 1000000);
+    } else {
+        pthread_t threads[ntests];
+        sem_t sem;
+        sem_init(&sem, 0, parallel);
+        for (i = 0; i < ntests; i++) {
+            tests[i].sem = &sem;
+            sem_wait(&sem);
+            pthread_create(&threads[i], NULL, run_test_thread, &tests[i]);
         }
-        if (tests[i].result < 0)
-            failed++;
+        for (i = 0; i < ntests; i++)
+            pthread_join(threads[i], NULL);
+        for (i = 0; i < ntests; i++)
+            if (tests[i].result < 0)
+                failed++;
     }
     free(tests);
 
