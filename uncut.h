@@ -77,12 +77,12 @@ int uncut_param_int(const char *name);
  * @param parameters NULL terminated list of test suite parameters
  * @param argc Command line argument count
  * @param argv Command line argument list
- * @param cb Callback to call on completion of each test
+ * @param callback Callback to call on completion of each test
  * @return 0 if all tests run successfully, < 0 otherwise
  */
 int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
                     struct uncut_parameter *parameters, int argc,
-                    char *argv[], uncut_callback cb);
+                    char *argv[], uncut_callback callback);
 
 /**
  * Utility macros to simplify test code
