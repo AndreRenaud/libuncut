@@ -107,16 +107,14 @@ static int group_count(struct uncut_suite *group)
 static int run_test(struct uncut_execution *test)
 {
     struct uncut_test *item = &test->group->tests[test->item_index];
-    struct timespec ts1, ts2;
+    struct timespec ts1 = {0, 0}, ts2 = {0, 0};
     if (test->callback) {
         test->callback(test->group, item, 0, -1);
-        if (clock_gettime(CLOCK_MONOTONIC, &ts1) < 0)
-            ts1.tv_sec = ts1.tv_nsec = 0;
+        clock_gettime(CLOCK_MONOTONIC, &ts1);
     }
     test->result = item->function();
     if (test->callback) {
-        if (clock_gettime(CLOCK_MONOTONIC, &ts2) < 0)
-            ts2.tv_sec = ts2.tv_nsec = 0;
+        clock_gettime(CLOCK_MONOTONIC, &ts2);
         test->callback(test->group, item, test->result,
                        (ts2.tv_sec - ts1.tv_sec) * 1000 +
                            (ts2.tv_nsec - ts1.tv_nsec) / 1000000);
@@ -131,6 +129,25 @@ static void *run_test_thread(void *data)
     if (test->sem)
         sem_post(test->sem);
     return NULL;
+}
+
+struct uncut_execution *update_tests(struct uncut_execution *tests,
+                                     int ntests, struct uncut_suite *group,
+                                     int index, uncut_callback callback)
+{
+    struct uncut_execution *new_tests =
+        realloc(tests, ntests * sizeof(struct uncut_execution));
+    if (!new_tests) {
+        free(tests);
+        return NULL;
+    }
+    tests = new_tests;
+    tests[ntests - 1].group = group;
+    tests[ntests - 1].item_index = index;
+    tests[ntests - 1].result = 0;
+    tests[ntests - 1].callback = callback;
+    tests[ntests - 1].sem = NULL;
+    return tests;
 }
 
 int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
@@ -154,7 +171,6 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
         case 't': {
             char *group_name, *items;
             struct uncut_suite *group;
-            struct uncut_execution *new_tests;
 
             group_name = optarg;
             items = strchr(optarg, ':');
@@ -189,30 +205,17 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
                     }
                     /* FIXME: Parse item numbers properly */
                     ntests++;
-                    new_tests = realloc(
-                        tests, ntests * sizeof(struct uncut_execution));
-                    if (!new_tests) {
-                        free(tests);
+                    tests =
+                        update_tests(tests, ntests, group, index, callback);
+                    if (!tests)
                         return -ENOMEM;
-                    }
-                    tests = new_tests;
-                    tests[ntests - 1].group = group;
-                    tests[ntests - 1].item_index = index;
-                    tests[ntests - 1].result = 0;
                 }
             } else {
                 for (i = 0; group->tests[i].item_name; i++) {
                     ntests++;
-                    new_tests = realloc(
-                        tests, ntests * sizeof(struct uncut_execution));
-                    if (!new_tests) {
-                        free(tests);
+                    tests = update_tests(tests, ntests, group, i, callback);
+                    if (!tests)
                         return -ENOMEM;
-                    }
-                    tests = new_tests;
-                    tests[ntests - 1].group = group;
-                    tests[ntests - 1].item_index = i;
-                    tests[ntests - 1].result = 0;
                 }
             }
             break;
@@ -268,20 +271,10 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
              group++) {
             for (i = 0; group->tests[i].item_name && group->tests[i].function;
                  i++) {
-                struct uncut_execution *new_tests;
                 ntests++;
-                new_tests =
-                    realloc(tests, ntests * sizeof(struct uncut_execution));
-                if (!new_tests) {
-                    free(tests);
+                tests = update_tests(tests, ntests, group, i, callback);
+                if (!tests)
                     return -ENOMEM;
-                }
-                tests = new_tests;
-                tests[ntests - 1].group = group;
-                tests[ntests - 1].item_index = i;
-                tests[ntests - 1].result = 0;
-                tests[ntests - 1].callback = callback;
-                tests[ntests - 1].sem = NULL;
             }
         }
     }
