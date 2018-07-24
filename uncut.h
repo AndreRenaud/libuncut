@@ -8,6 +8,10 @@
 #ifndef UNCUT_H
 #define UNCUT_H
 
+/**
+ * Defines a function to call to run a test.
+ * A return value of < 0 is considered a failure, and >= 0 is a success
+ */
 typedef int (*uncut_function)(void);
 
 /**
