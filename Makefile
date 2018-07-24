@@ -3,6 +3,7 @@ LFLAGS=-lpthread
 
 CHECKARGS=--std=c99 --error-exitcode=1 --enable=style,warning,performance,portability,unusedFunction --quiet
 CLANG_FORMAT?=clang-format
+CLANG_TIDY?=clang-tidy
 
 default: demo_prog
 
@@ -20,6 +21,8 @@ check: FORCE
 	$(CLANG_FORMAT) uncut.c | colordiff -u uncut.c -
 	$(CLANG_FORMAT) uncut.h | colordiff -u uncut.h -
 	$(CLANG_FORMAT) demo_prog.c | colordiff -u demo_prog.c -
+	$(CLANG_TIDY) uncut.c
+	$(CLANG_TIDY) demo_prog.c
 
 demo_prog: libuncut.a demo_prog.o
 	$(CC) -o $@ demo_prog.o libuncut.a $(LFLAGS)
