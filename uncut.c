@@ -310,7 +310,7 @@ int uncut_suite_run(struct uncut_suite *groups,
 
     global_parameters = NULL;
 
-    fprintf(stderr, "\nSUMMARY ': %s\n", failed ? "FAILURE" : "SUCCESS");
+    fprintf(stderr, "\nSUMMARY: %s\n", failed ? "FAILURE" : "SUCCESS");
 
     return failed ? -1 : 0;
 }
