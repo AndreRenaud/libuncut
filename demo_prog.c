@@ -4,71 +4,34 @@
 
 #include "uncut.h"
 
-static int pass_test(void)
+DECLARE_TEST(demo, pass)
 {
-    printf("Pass test: %s\n", uncut_param("myvalue"));
     return 0;
 }
 
-static int fail_test(void)
+DECLARE_TEST(demo, fail)
 {
-    printf("Failed test: %d\n", uncut_param_int("myvalue"));
     return -1;
 }
 
-static int slow_test(void)
+DECLARE_TEST(demo, slow)
 {
     sleep(10);
     return 0;
 }
 
-static int slow_fail_test(void)
+DECLARE_TEST(demo, slow_fail)
 {
     sleep(10);
     return -1;
 }
 
-static int param_test(void)
+DECLARE_TEST(demo2, param)
 {
-    UNCUT_EQ(uncut_param_int("myvalue"), 10);
+    UNCUT_EQ(uncut_param_int("myinteger"), 10);
     UNCUT_ASSERT(strcmp(uncut_param("myvalue"), "somevalue") == 0);
     return 0;
 }
 
-struct uncut_parameter params[] = {
-    {"myvalue", "10", "Some value that the tests use"},
-    {NULL, NULL, NULL},
-};
-
-struct uncut_test tests[] = {
-    {"pass", pass_test},
-    {"fail", fail_test},
-    {"pass2", pass_test},
-    {"slow", slow_test},
-    {"slow_fail", slow_fail_test},
-    {"params", param_test},
-    {NULL, NULL},
-};
-
-struct uncut_suite suite[] = {
-    {"tests", tests},
-    {NULL, NULL},
-};
-
-static void test_callback(const struct uncut_suite *suite,
-                          const struct uncut_test *test, int retval,
-                          int test_time)
-{
-    if (test_time < 0) {
-        printf("Running test '%s/%s': ", suite->group_name, test->item_name);
-        fflush(stdout);
-    } else {
-        printf("%s [%d ms]\n", retval ? "failed" : "succeeded", test_time);
-    }
-}
-
-int main(int argc, char *argv[])
-{
-    return uncut_suite_run("Demo tests", suite, params, argc, argv,
-                           test_callback);
-}
+DECLARE_PARAM(myvalue, "somevalue", "Some value that the tests use");
+DECLARE_PARAM(myinteger, "10", "Some integer value that the tests use");

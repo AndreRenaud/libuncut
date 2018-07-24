@@ -32,7 +32,6 @@ static void print_uncut_details(struct uncut_suite *groups,
                                 struct uncut_parameter *parameters)
 {
     struct uncut_suite *group;
-    struct uncut_parameter *param;
     int i;
 
     for (group = groups; group->group_name; group++) {
@@ -43,10 +42,12 @@ static void print_uncut_details(struct uncut_suite *groups,
         }
     }
 
-    fprintf(stderr, "Parameters:\n");
-    for (param = parameters; param->name; param++)
-        fprintf(stderr, "\t%-16s: %s (Default: %s)\n", param->name,
-                param->description, param->value);
+    if (parameters) {
+        fprintf(stderr, "Parameters:\n");
+        for (struct uncut_parameter *param = parameters; param->name; param++)
+            fprintf(stderr, "\t%-16s: %s (Default: %s)\n", param->name,
+                    param->description, param->value);
+    }
 }
 
 static void uncut_usage(const char *program, struct uncut_suite *groups,
@@ -150,7 +151,7 @@ struct uncut_execution *update_tests(struct uncut_execution *tests,
     return tests;
 }
 
-int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
+int uncut_suite_run(struct uncut_suite *groups,
                     struct uncut_parameter *parameters, int argc,
                     char *argv[], uncut_callback callback)
 {
@@ -309,8 +310,7 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
 
     global_parameters = NULL;
 
-    fprintf(stderr, "\nSUMMARY '%s': %s\n", suite_name,
-            failed ? "FAILURE" : "SUCCESS");
+    fprintf(stderr, "\nSUMMARY ': %s\n", failed ? "FAILURE" : "SUCCESS");
 
     return failed ? -1 : 0;
 }
@@ -329,4 +329,98 @@ int uncut_param_int(const char *name)
     if (match && match->value)
         return strtol(match->value, NULL, 0);
     return -1;
+}
+
+static struct uncut_suite *uncut_tests = NULL;
+static struct uncut_parameter *uncut_parameters = NULL;
+
+void uncut_register_test(const char *group_name, const char *test_name,
+                         uncut_function function)
+{
+    struct uncut_suite *suite;
+    struct uncut_test *tests;
+    int ntests = 0;
+
+    for (suite = uncut_tests; suite && suite->group_name; suite++) {
+        if (strcmp(suite->group_name, group_name) == 0)
+            break;
+    }
+    if (!suite || !suite->group_name) {
+        int nsuites = 0;
+        for (struct uncut_suite *s = uncut_tests; s && s->group_name; s++)
+            nsuites++;
+        nsuites++;
+        suite =
+            realloc(uncut_tests, (nsuites + 1) * sizeof(struct uncut_suite));
+        uncut_tests = suite;
+        if (!suite)
+            return;
+        suite[nsuites - 1].group_name = group_name;
+        suite[nsuites - 1].tests = NULL;
+        suite[nsuites].group_name = NULL;
+        suite[nsuites].tests = NULL;
+
+        suite = &suite[nsuites - 1];
+    }
+
+    tests = suite->tests;
+
+    for (struct uncut_test *t = tests; t && t->item_name; t++)
+        ntests++;
+    ntests++;
+    tests = realloc(tests, (ntests + 1) * sizeof(struct uncut_test));
+    suite->tests = tests;
+    if (!tests)
+        return;
+    tests[ntests - 1].item_name = test_name;
+    tests[ntests - 1].function = function;
+    tests[ntests].item_name = NULL;
+    tests[ntests].function = NULL;
+}
+
+void uncut_register_param(const char *name, const char *value,
+                          const char *description)
+{
+    struct uncut_parameter *param;
+    int nparams = 0;
+
+    for (param = uncut_parameters; param && param->name; param++) {
+        nparams++;
+        if (strcmp(name, param->name) == 0) {
+            fprintf(stderr, "Duplicate parameter defined '%s'\n", name);
+            exit(1);
+        }
+    }
+    nparams++;
+
+    uncut_parameters = realloc(
+        uncut_parameters, (nparams + 1) * sizeof(struct uncut_parameter));
+    if (!uncut_parameters)
+        return;
+    uncut_parameters[nparams - 1].name = name;
+    uncut_parameters[nparams - 1].value = value;
+    uncut_parameters[nparams - 1].description = description;
+    uncut_parameters[nparams].name = NULL;
+    uncut_parameters[nparams].value = NULL;
+    uncut_parameters[nparams].description = NULL;
+}
+
+static void simple_callback(const struct uncut_suite *suite,
+                            const struct uncut_test *test, int retval,
+                            int test_time)
+{
+    if (test_time < 0) {
+        printf("Running test '%s/%s': ", suite->group_name, test->item_name);
+        fflush(stdout);
+    } else {
+        printf("%s [%d ms]\n", retval ? "failed" : "succeeded", test_time);
+    }
+}
+
+int main(int argc, char *argv[]) __attribute__((weak));
+
+int main(int argc, char *argv[])
+{
+    return uncut_suite_run(uncut_tests, uncut_parameters, argc, argv,
+                           simple_callback);
 }

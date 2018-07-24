@@ -76,7 +76,6 @@ int uncut_param_int(const char *name);
 
 /**
  * Run a list of test groups with the given default parameters.
- * @param suite_name Name of the suite of tests that are being run
  * @param groups NULL terminated list of test suite groups
  * @param parameters NULL terminated list of test suite parameters
  * @param argc Command line argument count
@@ -84,7 +83,7 @@ int uncut_param_int(const char *name);
  * @param callback Callback to call on completion of each test
  * @return 0 if all tests run successfully, < 0 otherwise
  */
-int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
+int uncut_suite_run(struct uncut_suite *groups,
                     struct uncut_parameter *parameters, int argc,
                     char *argv[], uncut_callback callback);
 
@@ -102,6 +101,30 @@ int uncut_suite_run(const char *suite_name, struct uncut_suite *groups,
         fprintf(stderr, "Error: %s:%d: " #a " != " #b "\n",                  \
                 __PRETTY_FUNCTION__, __LINE__);                              \
         return -1;                                                           \
+    }
+
+void uncut_register_test(const char *group_name, const char *test_name,
+                         uncut_function function);
+void uncut_register_param(const char *name, const char *value,
+                          const char *description);
+
+#define DECLARE_TEST(group_name, test_name)                                  \
+    static int test_##group_name##test_name(void);                           \
+    static void uncut_register_##group_name##test_name(void)                 \
+        __attribute__((constructor));                                        \
+    static void uncut_register_##group_name##test_name(void)                 \
+    {                                                                        \
+        uncut_register_test(#group_name, #test_name,                         \
+                            test_##group_name##test_name);                   \
+    }                                                                        \
+    static int test_##group_name##test_name(void)
+
+#define DECLARE_PARAM(name, value, description)                              \
+    static void uncut_param_register_##name(void)                            \
+        __attribute__((constructor));                                        \
+    static void uncut_param_register_##name(void)                            \
+    {                                                                        \
+        uncut_register_param(#name, value, description);                     \
     }
 
 #endif
