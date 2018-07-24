@@ -10,6 +10,7 @@ It supports execution of individual tests either sequentially or in parallel, an
 Libuncut is designed to be used in two ways. Either via macros which automatically construct the test functions at compile/runtime and start the tests immediately, or if more control is required the structures can be created by hand and the test handler called manually.
 
 ### Macro invocation
+#### test_suite.c
 ```c
 #include <string.h>
 #include "uncut.h"
@@ -23,6 +24,7 @@ DECLARE_TEST(suite_name, test_name) {
 
 ```
 
+#### Compilation & invocation
 ```bash
 user@host:~/code$ gcc -o test_suite test_suite.c uncut.c -lpthread
 user@host:~/code$ ./test_suite -l
@@ -42,6 +44,8 @@ SUMMARY: FAILURE
 ```
 
 ### Customised invocation
+
+#### test_suite.c
 ```c
 #include <stdio.h>
 #include "uncut.h"
@@ -101,6 +105,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+#### Compilation & invocation
 ```bash
 user@host:~/code$ gcc -o test_suite test_suite.c uncut.c -lpthread
 user@host:~/code$ ./test_suite -l
