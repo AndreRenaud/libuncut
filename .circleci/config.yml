@@ -7,10 +7,10 @@ jobs:
       - checkout
       - run:
           name: Add tools
-          command: apt-get update && apt-get -y install cppcheck gcc make astyle colordiff
+          command: apt-get update && apt-get -y install cppcheck gcc make clang-format colordiff
       - run:
           name: Check
-          command: make check 
+          command: make check
       - run:
           name: Build
           command: make
