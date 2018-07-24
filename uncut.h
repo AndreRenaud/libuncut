@@ -92,14 +92,13 @@ int uncut_suite_run(struct uncut_suite *groups,
  */
 #define UNCUT_ASSERT(a)                                                      \
     if (!(a)) {                                                              \
-        fprintf(stderr, "Error: %s:%d: !" #a "\n", __PRETTY_FUNCTION__,      \
-                __LINE__);                                                   \
+        fprintf(stderr, "Error: %s:%d: !" #a "\n", __func__, __LINE__);      \
         return -1;                                                           \
     }
 #define UNCUT_EQ(a, b)                                                       \
     if ((a) != (b)) {                                                        \
-        fprintf(stderr, "Error: %s:%d: " #a " != " #b "\n",                  \
-                __PRETTY_FUNCTION__, __LINE__);                              \
+        fprintf(stderr, "Error: %s:%d: " #a " != " #b "\n", __func__,        \
+                __LINE__);                                                   \
         return -1;                                                           \
     }
 

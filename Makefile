@@ -1,7 +1,7 @@
-CFLAGS=-g -Wall -pipe
+CFLAGS=-g -Wall -pipe --std=c1x -O3 -pedantic -Wsuggest-attribute=const -Wsuggest-attribute=format -Wclobbered -Wempty-body -Wignored-qualifiers -Wmissing-field-initializers -Wold-style-declaration -Wmissing-parameter-type -Woverride-init -Wtype-limits -Wuninitialized -Wunused-but-set-parameter
 LFLAGS=-lpthread
 
-CHECKARGS=--std=c99 --error-exitcode=1 --enable=style,warning,performance,portability,unusedFunction --quiet
+CHECKARGS=--std=c11 --error-exitcode=1 --enable=style,warning,performance,portability,unusedFunction --quiet
 CLANG_FORMAT?=clang-format
 CLANG_TIDY?=clang-tidy
 

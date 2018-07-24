@@ -33,5 +33,5 @@ DECLARE_TEST(demo2, param)
     return 0;
 }
 
-DECLARE_PARAM(myvalue, "somevalue", "Some value that the tests use");
-DECLARE_PARAM(myinteger, "10", "Some integer value that the tests use");
+DECLARE_PARAM(myvalue, "somevalue", "Some value that the tests use")
+DECLARE_PARAM(myinteger, "10", "Some integer value that the tests use")
